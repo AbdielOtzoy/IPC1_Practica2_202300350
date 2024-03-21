@@ -12,7 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-public class ViajePanel extends JPanel {
+public class ViajePanel extends JPanel{
     public Viaje viaje;
     public JLabel origenLabel = new JLabel();
     public JLabel destinoLabel = new JLabel();
