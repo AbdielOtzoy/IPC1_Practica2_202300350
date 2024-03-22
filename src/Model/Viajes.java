@@ -38,6 +38,13 @@ public class Viajes implements Serializable {
         }
         return null;
     }
+    public void setViaje(int id, Viaje viaje) {
+        for (int i = 0; i < viajes.size(); i++) {
+            if (viajes.get(i).getId() == id) {
+                viajes.set(i, viaje);
+            }
+        }
+    }
 
     public void addId() {
         int id = 1;

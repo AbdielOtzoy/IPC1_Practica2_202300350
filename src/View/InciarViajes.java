@@ -5,7 +5,6 @@ import Model.VehiculoPremiun;
 import Model.Viaje;
 import Model.Viajes;
 import View.UI.Componentes;
-import View.UI.HistorialViajes;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -16,13 +15,13 @@ public class InciarViajes extends JFrame {
     public JPanel MainPanel = new JPanel();
     public Viajes viajes = Viajes.getInstance();
     public ArrayList<Viaje> viajesList = viajes.getViajes();
-    public ArrayList<JPanel> viajesPanel = new ArrayList<JPanel>();
+    public ArrayList<ViajePanel> viajesPanel = new ArrayList<ViajePanel>();
     public JButton rutasBtn = new JButton("Rutas");
     public JButton historialViajesBtn = new JButton("Historial de Viajes");
     public JButton generarViajeBtn = new JButton("Generar Viaje");
+    public JButton inciarTodosBtn = new JButton("Iniciar todos los viajes");
     public Componentes componentes = new Componentes();
     public JPanel panelNav = new JPanel();
-
 
     public InciarViajes() {
         setContentPane(MainPanel);
@@ -31,8 +30,10 @@ public class InciarViajes extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         for (Viaje viaje : viajesList) {
-            Viaje newViaje = new Viaje(viaje.getOrigen(), viaje.getDestino(), viaje.getDistancia(), viaje.getNombreVehiculo(), viaje.getTransporte());
-            viajesPanel.add(new ViajePanel(newViaje));
+            if(viaje.getFechaFin() == null) {
+                ViajePanel panel = new ViajePanel(viaje);
+                viajesPanel.add(panel);
+            }
         }
         for (JPanel panel : viajesPanel) {
             MainPanel.add(panel);
@@ -46,7 +47,7 @@ public class InciarViajes extends JFrame {
 
         setLayout(new GridLayout(1,1, 10, 10));
         MainPanel.setLayout(new GridLayout(4,1, 10, 10));
-        panelNav.setLayout(new GridLayout(1,3, 10, 10));
+        panelNav.setLayout(new GridLayout(1,4, 10, 10));
 
         setBackground(componentes.paleta.FONDO);
         MainPanel.setBackground(componentes.paleta.FONDO);
@@ -58,14 +59,17 @@ public class InciarViajes extends JFrame {
         componentes.rutaBtn(rutasBtn);
         componentes.rutaBtn(historialViajesBtn);
         componentes.rutaBtn(generarViajeBtn);
+        componentes.primaryBtn(inciarTodosBtn);
 
         rutasBtn.addActionListener(this::actionPerformed);
         historialViajesBtn.addActionListener(this::actionPerformed);
         generarViajeBtn.addActionListener(this::actionPerformed);
+        inciarTodosBtn.addActionListener(this::actionPerformed);
 
         panelNav.add(rutasBtn);
         panelNav.add(historialViajesBtn);
         panelNav.add(generarViajeBtn);
+        panelNav.add(inciarTodosBtn);
 
         MainPanel.add(panelNav);
         setVisible(true);
@@ -83,6 +87,12 @@ public class InciarViajes extends JFrame {
         if (e.getSource() == generarViajeBtn) {
             new GenerarViaje();
             setVisible(false);
+        }
+        if(e.getSource() == inciarTodosBtn) {
+
+            for (ViajePanel panel : viajesPanel) {
+                panel.hiloIniciar();
+            }
         }
     }
 

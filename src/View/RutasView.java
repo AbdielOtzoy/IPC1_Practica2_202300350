@@ -4,7 +4,6 @@ import Controller.CsvController;
 import Model.Ruta;
 import Model.Rutas;
 import View.UI.Componentes;
-import View.UI.HistorialViajes;
 import View.UI.Paleta;
 
 import javax.swing.*;

@@ -1,16 +1,13 @@
 package View;
 
+import Controller.Serializa;
 import Model.*;
 import View.UI.Componentes;
-import View.UI.HistorialViajes;
 
 import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
 import java.awt.event.ItemEvent;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 
 public class GenerarViaje extends JFrame {
@@ -34,6 +31,7 @@ public class GenerarViaje extends JFrame {
     public Rutas rutas = Rutas.getInstance();
     public Transportes transportes = Transportes.getInstance();
     public Viajes viajes = Viajes.getInstance();
+    public Serializa serializa = new Serializa();
 
     public GenerarViaje() {
         setContentPane(MainPanel);
@@ -91,6 +89,7 @@ public class GenerarViaje extends JFrame {
         panelNav.add(inciarViajeBtn);
         panelNav.add(historialViajesBtn);
 
+        isDisponibleGenerar();
 
         MainPanel.add(panel1);
         MainPanel.add(panel2);
@@ -152,19 +151,12 @@ public class GenerarViaje extends JFrame {
                      // obtener la informacion de la ruta
                     Ruta ruta = rutas.getRuta(origen, destino);
                     Viaje viaje = new Viaje(origen, destino, ruta.getDistancia(), vehiculoNombre, transporte);
-                    viajes.addViaje(viaje);
 
-                    // guardar el viaje en el archivo viajes.bin
-                    try {
-                        FileOutputStream fileOut = new FileOutputStream("viajes.bin", true); // true para modo de apertura para agregar
-                        ObjectOutputStream objectOut = new ObjectOutputStream(fileOut);
-                        objectOut.writeObject(viaje);
-                        objectOut.close();
-                        fileOut.close();
-                        System.out.println("Viaje guardado correctamente.");
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
-                    }
+
+                    viajes.addViaje(viaje);
+                    viajes.addId();
+
+                    serializa.viajes(viajes.getViajes());
 
                     JOptionPane.showMessageDialog(null, "Viaje generado con éxito", "Éxito", JOptionPane.INFORMATION_MESSAGE);
                     reinit();
@@ -191,12 +183,26 @@ public class GenerarViaje extends JFrame {
         vehiculoComboBox.removeAllItems();
         llenarComboBox();
         ArrayList<Viaje> viajeList = viajes.getViajes();
-        if(viajeList.size() == 3) {
+        // contar cuantos viajes no han finalizado
+        isDisponibleGenerar();
+
+
+    }
+
+    public void isDisponibleGenerar() {
+        ArrayList<Viaje> viajeList = viajes.getViajes();
+        int count = 0;
+        for (Viaje v : viajeList) {
+            if(v.getFechaFin() == null) {
+                count++;
+            }
+        }
+        // si hay más de 3 viajes no finalizados se debe mostrar un mensaje
+        if (count >= 3) {
             gerenarViajeButton.setBackground(componentes.paleta.ROJO);
             gerenarViajeButton.setText("Los tres pilotos ya están en viaje, espere a que terminen");
             gerenarViajeButton.setEnabled(false);
         }
-
     }
 
     public static void main(String[] args) {

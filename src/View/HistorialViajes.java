@@ -1,12 +1,15 @@
-package View.UI;
+package View;
 
 import Model.Viaje;
 import Model.Viajes;
 import View.GenerarViaje;
 import View.InciarViajes;
 import View.RutasView;
+import View.UI.Componentes;
+import View.UI.Paleta;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.io.*;
 import java.util.List;
@@ -50,7 +53,6 @@ public class HistorialViajes extends JFrame implements Serializable {
         btnGenerarViaje.addActionListener(this::actionPerformed);
 
         scrollPane.setPreferredSize(new Dimension(800, 400));
-        scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         panelNav.setPreferredSize(new Dimension(800, 30));
 
         MainPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 0, 10));
@@ -81,15 +83,34 @@ public class HistorialViajes extends JFrame implements Serializable {
 
     public void cargarTablaViajes() {
         List<Viaje> listaViajes = viajes.getViajes();
-        String[] columnas = {"Origen", "Destino", "Distancia", "Vehículo"};
-        String[][] datos = new String[listaViajes.size()][5];
+        String[] columnas = {"id","Fecha y Hora de inicio", "Fecha y Hora de Fin", "Distancia","Vehiculo", "Gasolina consumida"};
+        String[][] datos = new String[listaViajes.size()][6];
         for (int i = 0; i < listaViajes.size(); i++) {
-            datos[i][0] = listaViajes.get(i).getOrigen();
-            datos[i][1] = listaViajes.get(i).getDestino();
-            datos[i][2] = String.valueOf(listaViajes.get(i).getDistancia());
-            datos[i][3] = listaViajes.get(i).getNombreVehiculo();
+            datos[i][0] = String.valueOf(listaViajes.get(i).getId());
+            datos[i][1] = listaViajes.get(i).getFechaIncio() + " " + listaViajes.get(i).getHoraInicio();
+            if(listaViajes.get(i).getFechaFin() == null){
+                datos[i][2] = "En curso";
+            } else {
+                datos[i][2] = listaViajes.get(i).getFechaFin() + " " + listaViajes.get(i).getHoraFin();
+            }
+            datos[i][3] = String.valueOf(listaViajes.get(i).getDistancia());
+            datos[i][4] = listaViajes.get(i).getNombreVehiculo();
+            double gasolinaConsumida = listaViajes.get(i).getTransporte().getGastoPorKm() * listaViajes.get(i).getDistancia();
+            gasolinaConsumida = Math.round(gasolinaConsumida * 100.0) / 100.0;
+            datos[i][5] = String.valueOf(gasolinaConsumida);
         }
+
         tablaViajes = new JTable(datos, columnas);
+        // estilizar tabla
+        tablaViajes.setRowHeight(30);
+        tablaViajes.getTableHeader().setReorderingAllowed(false);
+        tablaViajes.setGridColor(new java.awt.Color(0, 0, 0));
+        tablaViajes.setBorder(new EmptyBorder(0,0,0,0));
+        tablaViajes.setGridColor(paleta.PRIMARIO);
+        // se asigna el modelo a la tabla
+        tablaViajes.getTableHeader().setBackground(paleta.PRIMARIO);
+        tablaViajes.getTableHeader().setFont(new Font("Arial", Font.BOLD, 15));
+        tablaViajes.getTableHeader().setForeground(paleta.BLANCO);
         scrollPane.setViewportView(tablaViajes);
 
     }

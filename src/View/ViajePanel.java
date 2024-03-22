@@ -1,6 +1,8 @@
 package View;
 
+import Controller.Serializa;
 import Model.Viaje;
+import Model.Viajes;
 import View.UI.Componentes;
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -10,10 +12,13 @@ import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 public class ViajePanel extends JPanel{
     public Viaje viaje;
+    public Viajes viajes = Viajes.getInstance();
     public JLabel origenLabel = new JLabel();
     public JLabel destinoLabel = new JLabel();
     public JLabel vehiculoLabel = new JLabel();
@@ -36,6 +41,7 @@ public class ViajePanel extends JPanel{
     public Thread hiloRegresar;
     public Object lock = new Object();
     public boolean isRegresando = false;
+    public Serializa serializa = new Serializa();
     public ViajePanel(Viaje viaje) {
         this.viaje = viaje;
         setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10));
@@ -45,7 +51,7 @@ public class ViajePanel extends JPanel{
         vehiculoLabel.setText(viaje.getNombreVehiculo());
         distanciaLabel.setText("Distancia: " + viaje.getDistancia() + " km");
         recorridoLabel.setText("Recorrido: " + viaje.getRecorridoKm() + " km");
-        gasolina = 2;
+        gasolina = viaje.getTransporte().getCapacidadTanque();
         gasolinaCurrent.setText("Gasolina: " + gasolina + " L");
 
         origenLabel.setFont(new Font("Arial", Font.BOLD, 12));
@@ -168,6 +174,11 @@ public class ViajePanel extends JPanel{
 
     public void onBtnInicio(ActionEvent e) {
         if (vehiculoPanel.getBounds().x == 520 && vehiculoPanel.getBounds().y == 10) {
+            Date date = new Date();
+            SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
+            SimpleDateFormat formatter2 = new SimpleDateFormat("HH:mm:ss");
+            viaje.setFechaIncio(formatter.format(date));
+            viaje.setHoraInicio(formatter2.format(date));
             hiloIniciar();
             hiloRecorridoInicio();
         } else {
@@ -219,6 +230,7 @@ public class ViajePanel extends JPanel{
         Thread hiloRecorrido = new Thread(() -> {
             for (int i = 1; i <= viaje.getDistancia(); i++) {
                 viaje.setRecorridoKm(i);
+                recorridoLabel.removeAll();
                 recorridoLabel.setText("Recorrido: " + viaje.getRecorridoKm() + " km");
                 // gasolina
                 gasolina -= viaje.getTransporte().getGastoPorKm();
@@ -227,7 +239,7 @@ public class ViajePanel extends JPanel{
 
                 isGasolineEmpty();
 
-
+                gasolinaCurrent.removeAll();
                 gasolinaCurrent.setText("Gasolina: " + gasolina + " L");
                 try {
                     TimeUnit.SECONDS.sleep(1);
@@ -240,7 +252,6 @@ public class ViajePanel extends JPanel{
         hiloRecorrido.start();
     }
 
-    public double currentPositionFinal = 10;
     public void hiloRegresar() {
         System.out.println(currentPositionInit);
         double tiempo = (viaje.getDistancia() * 1000) / 260;
@@ -248,6 +259,15 @@ public class ViajePanel extends JPanel{
             for (double i = currentPositionInit; i <= 520; i += 2) {
                 currentPositionInit = i;
                 vehiculoPanel.setBounds((int) i, 10, 128, 128);
+
+                if(currentPositionInit == 520) {
+                    try {
+                        Thread.sleep(500);  // Wait for 1 second
+                    } catch (InterruptedException exception) {
+                        exception.printStackTrace();
+                    }
+                    finalizarViaje();
+                }
 
                 isGasolineEmpty();
 
@@ -259,6 +279,31 @@ public class ViajePanel extends JPanel{
             }
         });
         hiloRegresar.start();
+    }
+
+    public void finalizarViaje() {
+        isRunning = false;
+        System.out.println("Finalizando viaje");
+        // obtener la fecha y hora de finalizacion
+        Date date = new Date();
+        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
+        SimpleDateFormat formatter2 = new SimpleDateFormat("HH:mm:ss");
+        viaje.setFechaFin(formatter.format(date));
+        viaje.setHoraFin(formatter2.format(date));
+        System.out.println("Fecha de fin: " + viaje.getFechaFin());
+        System.out.println("Hora de fin: " + viaje.getHoraFin());
+        viajes.getViaje(viaje.getId()).setFechaFin(viaje.getFechaFin());
+        viajes.getViaje(viaje.getId()).setHoraFin(viaje.getHoraFin());
+        serializa.viajes(viajes.getViajes());
+
+        removeAll();
+        JLabel messageLabel = new JLabel("El viaje ha Terminado, puedes generar uno nuevo visitando Generar Viaje");
+        messageLabel.setFont(new Font("Arial", Font.BOLD, 12));
+        messageLabel.setForeground(componentes.paleta.BLANCO);
+        add(messageLabel);
+        setLayout(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        revalidate();
+        repaint();
     }
 
     public void hiloRecorridoFin() {
