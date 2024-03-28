@@ -1,6 +1,8 @@
 package View;
 
 import Controller.Serializa;
+import Model.RecorridoInfo;
+import Model.RecorridosInfo;
 import Model.Viaje;
 import Model.Viajes;
 import View.UI.Componentes;
@@ -26,7 +28,6 @@ public class ViajePanel extends JPanel{
     public JLabel recorridoLabel = new JLabel();
     public JLabel distanciaLabel = new JLabel();
     public JLabel gasolinaCurrent = new JLabel();
-
     public JPanel panelFin = new JPanel();
     public JPanel panelRecorrido = new JPanel();
     public JPanel panelInicio = new JPanel();
@@ -40,8 +41,11 @@ public class ViajePanel extends JPanel{
     public Thread hiloInicio;
     public Thread hiloRegresar;
     public Object lock = new Object();
-    public boolean isRegresando = false;
+    public boolean isRegresando;
     public Serializa serializa = new Serializa();
+    public RecorridoInfo recorridoInfo;
+    public RecorridosInfo recorridosInfo = RecorridosInfo.getInstance();
+    public double currentPositionInit = 520;
     public ViajePanel(Viaje viaje) {
         this.viaje = viaje;
         setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10));
@@ -53,6 +57,28 @@ public class ViajePanel extends JPanel{
         recorridoLabel.setText("Recorrido: " + viaje.getRecorridoKm() + " km");
         gasolina = viaje.getTransporte().getCapacidadTanque();
         gasolinaCurrent.setText("Gasolina: " + gasolina + " L");
+
+        recorridoInfo = recorridosInfo.getRecorrido(viaje.getId());
+        System.out.println(recorridoInfo);
+        currentPositionInit = recorridoInfo.getPosition();
+        isRegresando = recorridoInfo.getIsRegresando();
+
+        if(currentPositionInit != 520) {
+            vehiculoPanel.setBounds((int) currentPositionInit, 10, 128, 128);
+            gasolina = recorridoInfo.getGasolina();
+            gasolina = Math.round(gasolina * 100.0) / 100.0;
+            gasolinaCurrent.setText("Gasolina: " + gasolina + " L");
+            viaje.setRecorridoKm(recorridoInfo.getRecorridoKm());
+            System.out.println("Recorrido: " + viaje.getRecorridoKm() + " km");
+            recorridoLabel.setText("Recorrido: " + viaje.getRecorridoKm() + " km");
+            if(isRegresando) {
+                hiloRegresar();
+                hiloRecorridoFin();
+            } else {
+                hiloIniciar();
+                hiloRecorridoInicio();
+            }
+        }
 
         origenLabel.setFont(new Font("Arial", Font.BOLD, 12));
         destinoLabel.setFont(new Font("Arial", Font.BOLD, 12));
@@ -206,14 +232,21 @@ public class ViajePanel extends JPanel{
             }
         }
     }
-    public double currentPositionInit = 520;
     public void hiloIniciar() {
         double tiempo = (viaje.getDistancia() * 1000) / 260;
         hiloInicio = new Thread(() -> {
 
             for (double i = currentPositionInit; i >= 10; i -= 2) {
                 currentPositionInit = i;
+
                 vehiculoPanel.setBounds((int) i, 10, 128, 128);
+
+                recorridoInfo.setPosition(currentPositionInit);
+                recorridoInfo.setRecorridoKm(viaje.getRecorridoKm());
+                recorridoInfo.setGasolina(gasolina);
+                recorridosInfo.addRecorrido(recorridoInfo);
+
+                serializa.recorridos(recorridosInfo.getRecorridos());
 
                 isGasolineEmpty();
                 try {
@@ -228,7 +261,7 @@ public class ViajePanel extends JPanel{
 
     public void hiloRecorridoInicio() {
         Thread hiloRecorrido = new Thread(() -> {
-            for (int i = 1; i <= viaje.getDistancia(); i++) {
+            for (double i = viaje.getRecorridoKm(); i <= viaje.getDistancia(); i++) {
                 viaje.setRecorridoKm(i);
                 recorridoLabel.removeAll();
                 recorridoLabel.setText("Recorrido: " + viaje.getRecorridoKm() + " km");
@@ -238,6 +271,8 @@ public class ViajePanel extends JPanel{
                 gasolina = Math.round(gasolina * 100.0) / 100.0;
 
                 isGasolineEmpty();
+
+
 
                 gasolinaCurrent.removeAll();
                 gasolinaCurrent.setText("Gasolina: " + gasolina + " L");
@@ -253,12 +288,19 @@ public class ViajePanel extends JPanel{
     }
 
     public void hiloRegresar() {
-        System.out.println(currentPositionInit);
+        recorridoInfo.setIsRegresando(true);
         double tiempo = (viaje.getDistancia() * 1000) / 260;
         hiloRegresar = new Thread(() -> {
             for (double i = currentPositionInit; i <= 520; i += 2) {
                 currentPositionInit = i;
                 vehiculoPanel.setBounds((int) i, 10, 128, 128);
+
+                recorridoInfo.setPosition(currentPositionInit);
+                recorridoInfo.setRecorridoKm(viaje.getRecorridoKm());
+                recorridoInfo.setGasolina(gasolina);
+                recorridosInfo.addRecorrido(recorridoInfo);
+
+                serializa.recorridos(recorridosInfo.getRecorridos());
 
                 if(currentPositionInit == 520) {
                     try {
@@ -307,6 +349,7 @@ public class ViajePanel extends JPanel{
     }
 
     public void hiloRecorridoFin() {
+
         Thread hiloRecorrido = new Thread(() -> {
             for (int i = (int) viaje.getDistancia(); i >= 1; i--) {
                 viaje.setRecorridoKm(viaje.getRecorridoKm() + 1);

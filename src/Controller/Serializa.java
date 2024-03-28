@@ -1,5 +1,6 @@
 package Controller;
 
+import Model.RecorridoInfo;
 import Model.Viaje;
 
 import java.io.*;
@@ -30,6 +31,31 @@ public class Serializa {
             e.printStackTrace();
         }
         return viajes;
+    }
+
+    public void recorridos(List<RecorridoInfo> recorridos) {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("recorridos.bin"))) {
+            FileOutputStream fileOut = new FileOutputStream("recorridos.bin", true); // true para modo de apertura para agregar
+            oos.writeObject(recorridos);
+            oos.close();
+            fileOut.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public List<RecorridoInfo> obtenerRecorridos() {
+        List<RecorridoInfo> recorridos = null;
+        try {
+            FileInputStream fileIn = new FileInputStream("recorridos.bin");
+            ObjectInputStream in = new ObjectInputStream(fileIn);
+            recorridos = (List<RecorridoInfo>) in.readObject();
+            in.close();
+            fileIn.close();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return recorridos;
     }
 
 

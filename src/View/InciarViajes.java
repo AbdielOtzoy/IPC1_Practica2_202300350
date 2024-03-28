@@ -92,6 +92,7 @@ public class InciarViajes extends JFrame {
 
             for (ViajePanel panel : viajesPanel) {
                 panel.hiloIniciar();
+                panel.hiloRecorridoInicio();
             }
         }
     }

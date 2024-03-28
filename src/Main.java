@@ -16,7 +16,7 @@ public class Main {
     public static Transportes transportes = Transportes.getInstance();
     public static Viajes viajes = Viajes.getInstance();
     public static Serializa serializa = new Serializa();
-
+    public static RecorridosInfo recorridosInfo = RecorridosInfo.getInstance();
     public static void main(String[] args) {
         // leer el archivo de viajes.bin
         try {
@@ -26,6 +26,18 @@ public class Main {
                     viajes.addViaje(viaje);
                 }
                 viajes.addId();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // leer el archivo de recorridos.bin
+        try {
+            List<RecorridoInfo> recorridosList = serializa.obtenerRecorridos();
+            if (recorridosList != null) {
+                for (RecorridoInfo recorrido : recorridosList) {
+                    recorridosInfo.addRecorrido(recorrido);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();

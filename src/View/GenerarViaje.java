@@ -31,6 +31,7 @@ public class GenerarViaje extends JFrame {
     public Rutas rutas = Rutas.getInstance();
     public Transportes transportes = Transportes.getInstance();
     public Viajes viajes = Viajes.getInstance();
+    public RecorridosInfo recorridosInfo = RecorridosInfo.getInstance();
     public Serializa serializa = new Serializa();
 
     public GenerarViaje() {
@@ -152,11 +153,15 @@ public class GenerarViaje extends JFrame {
                     Ruta ruta = rutas.getRuta(origen, destino);
                     Viaje viaje = new Viaje(origen, destino, ruta.getDistancia(), vehiculoNombre, transporte);
 
-
                     viajes.addViaje(viaje);
                     viajes.addId();
 
                     serializa.viajes(viajes.getViajes());
+
+                    RecorridoInfo recorridoInfo = new RecorridoInfo(viaje.getId(), 520, transporte.getCapacidadTanque(), 1, false);
+                    recorridosInfo.addRecorrido(recorridoInfo);
+
+                    serializa.recorridos(recorridosInfo.getRecorridos());
 
                     JOptionPane.showMessageDialog(null, "Viaje generado con éxito", "Éxito", JOptionPane.INFORMATION_MESSAGE);
                     reinit();
